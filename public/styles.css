@@ -1,0 +1,339 @@
+:root {
+    --primary-color: #0066cc;
+    --primary-dark: #004999;
+    --secondary-color: #00aa88;
+    --background: #f5f7fa;
+    --surface: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #dfe6e9;
+    --error: #e74c3c;
+    --success: #27ae60;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--background);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 2rem 0;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.header .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 2rem 0 1rem;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.tab:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.tab.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 8px var(--shadow);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 0 8px 8px 8px;
+    box-shadow: 0 2px 8px var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-content h2 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+/* Forms */
+.form {
+    max-width: 600px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.form-group select,
+.form-group textarea,
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.form-group select:focus,
+.form-group textarea:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Loans List */
+.loans-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.loan-item {
+    background: var(--background);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.loan-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.loan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.loan-header strong {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.date {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.loan-body {
+    font-size: 0.95rem;
+}
+
+.loan-body > div {
+    margin-bottom: 0.25rem;
+}
+
+.item-number {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.feedback {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+    border-left: 3px solid var(--secondary-color);
+    font-style: italic;
+    color: var(--text-light);
+}
+
+/* Return items */
+.return-item label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.return-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.loan-date {
+    margin-left: 2.25rem;
+    margin-top: 0.25rem;
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+/* Persons List */
+.persons-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.person-item {
+    background: var(--background);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.person-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.person-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.person-details {
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.person-details > div {
+    margin-bottom: 0.25rem;
+}
+
+/* Info/Error messages */
+.info {
+    padding: 1rem;
+    background: var(--background);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 4px;
+    color: var(--text-light);
+}
+
+.error {
+    padding: 1rem;
+    background: #fee;
+    border-left: 4px solid var(--error);
+    border-radius: 4px;
+    color: var(--error);
+}
+
+/* Footer */
+.footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-light);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .tabs {
+        flex-direction: column;
+    }
+    
+    .tab {
+        border-radius: 8px;
+    }
+    
+    .tab-content {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    .persons-list {
+        grid-template-columns: 1fr;
+    }
+}

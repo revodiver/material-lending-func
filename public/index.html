@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materiaal Uitlenen - Revodiver</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>🤿 Materiaal Uitlenen</h1>
+                <p class="subtitle">Revodiver Material Lending System</p>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="tabs">
+                <button class="tab active" data-tab="lenen">Materiaal Lenen</button>
+                <button class="tab" data-tab="terugbrengen">Terugbrengen</button>
+                <button class="tab" data-tab="actief">Actieve Uitleningen</button>
+                <button class="tab" data-tab="personen">Personen</button>
+            </div>
+
+            <!-- Materiaal Lenen Tab -->
+            <div id="lenen" class="tab-content active">
+                <h2>Nieuw Materiaal Lenen</h2>
+                <form id="loanForm" class="form">
+                    <div class="form-group">
+                        <label for="personSelect">Persoon:</label>
+                        <select id="personSelect" required>
+                            <option value="">-- Selecteer persoon --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equipmentSelect">Materiaal:</label>
+                        <select id="equipmentSelect" multiple size="8" required>
+                        </select>
+                        <small>Houd Ctrl/Cmd ingedrukt voor meerdere items</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="borrowFeedback">Opmerking:</label>
+                        <textarea id="borrowFeedback" rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Uitlening Registreren</button>
+                </form>
+            </div>
+
+            <!-- Terugbrengen Tab -->
+            <div id="terugbrengen" class="tab-content">
+                <h2>Materiaal Terugbrengen</h2>
+                <form id="returnForm" class="form">
+                    <div class="form-group">
+                        <label for="returnPersonSelect">Persoon:</label>
+                        <select id="returnPersonSelect">
+                            <option value="">-- Selecteer persoon --</option>
+                        </select>
+                    </div>
+
+                    <div id="activeLoansForReturn" class="loans-list">
+                        <p class="info">Selecteer een persoon om actieve uitleningen te zien</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Actieve Uitleningen Tab -->
+            <div id="actief" class="tab-content">
+                <h2>Actieve Uitleningen</h2>
+                <div id="activeLoans" class="loans-list">
+                    <p class="info">Laden...</p>
+                </div>
+            </div>
+
+            <!-- Personen Tab -->
+            <div id="personen" class="tab-content">
+                <h2>Actieve Leden</h2>
+                <div id="personsList" class="persons-list">
+                    <p class="info">Laden...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2026 Revodiver - Material Lending System</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
