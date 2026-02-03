@@ -25,7 +25,7 @@ export async function getConnection(): Promise<sql.ConnectionPool> {
   return pool;
 }
 
-export async function query<T>(queryText: string, params?: any): Promise<T[]> {
+export async function query<T>(queryText: string, params?: Record<string, any>): Promise<T[]> {
   const connection = await getConnection();
   const request = connection.request();
 
@@ -37,6 +37,23 @@ export async function query<T>(queryText: string, params?: any): Promise<T[]> {
 
   const result = await request.query(queryText);
   return result.recordset;
+}
+
+export async function executeTransaction<T>(
+  transactionFunc: (transaction: sql.Transaction) => Promise<T>
+): Promise<T> {
+  const connection = await getConnection();
+  const transaction = new sql.Transaction(connection);
+  
+  try {
+    await transaction.begin();
+    const result = await transactionFunc(transaction);
+    await transaction.commit();
+    return result;
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 }
 
 export { sql };

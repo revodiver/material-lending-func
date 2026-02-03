@@ -11,7 +11,7 @@ Azure Functions backend voor het material lending systeem. Deze backend biedt ee
 
 ## 📋 Vereisten
 
-- Node.js 22.x of hoger
+- Node.js 20.x or hoger
 - Azure Functions Core Tools v4
 - Azure SQL Database
 - Azure Functions App (voor productie deployment)

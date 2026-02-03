@@ -1,5 +1,5 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { query, getConnection, sql } from '../lib/database';
+import { query, executeTransaction, sql } from '../lib/database';
 
 interface Loan {
   LoanId: number;
@@ -232,26 +232,29 @@ async function createLoan(request: HttpRequest, context: InvocationContext): Pro
       };
     }
 
-    const connection = await getConnection();
-    const result = await connection.request()
-      .input('PersonId', sql.Int, body.PersonId)
-      .input('EquipmentId', sql.Int, body.EquipmentId)
-      .input('BorrowFeedback', sql.NVarChar, body.BorrowFeedback || '')
-      .input('BorrowedAt', sql.DateTime, new Date())
-      .query(`
-        INSERT INTO Loans (PersonId, EquipmentId, BorrowedAt, BorrowFeedback)
-        OUTPUT INSERTED.*
-        VALUES (@PersonId, @EquipmentId, @BorrowedAt, @BorrowFeedback)
-      `);
+    const result = await executeTransaction(async (transaction) => {
+      const insertResult = await transaction.request()
+        .input('PersonId', sql.Int, body.PersonId)
+        .input('EquipmentId', sql.Int, body.EquipmentId)
+        .input('BorrowFeedback', sql.NVarChar, body.BorrowFeedback || '')
+        .input('BorrowedAt', sql.DateTime, new Date())
+        .query(`
+          INSERT INTO Loans (PersonId, EquipmentId, BorrowedAt, BorrowFeedback)
+          OUTPUT INSERTED.*
+          VALUES (@PersonId, @EquipmentId, @BorrowedAt, @BorrowFeedback)
+        `);
 
-    // Update equipment availability
-    await connection.request()
-      .input('EquipmentId', sql.Int, body.EquipmentId)
-      .query('UPDATE Equipment SET IsAvailable = 0 WHERE EquipmentId = @EquipmentId');
+      // Update equipment availability
+      await transaction.request()
+        .input('EquipmentId', sql.Int, body.EquipmentId)
+        .query('UPDATE Equipment SET IsAvailable = 0 WHERE EquipmentId = @EquipmentId');
+
+      return insertResult.recordset[0];
+    });
 
     return {
       status: 201,
-      jsonBody: result.recordset[0],
+      jsonBody: result,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -277,9 +280,7 @@ async function createBatchLoans(request: HttpRequest, context: InvocationContext
       };
     }
 
-    const connection = await getConnection();
-    const createdLoans = [];
-
+    // Validate all loans before processing
     for (const loan of body) {
       if (!loan.PersonId || !loan.EquipmentId) {
         return {
@@ -287,25 +288,33 @@ async function createBatchLoans(request: HttpRequest, context: InvocationContext
           jsonBody: { error: 'PersonId and EquipmentId are required for all loans' },
         };
       }
-
-      const result = await connection.request()
-        .input('PersonId', sql.Int, loan.PersonId)
-        .input('EquipmentId', sql.Int, loan.EquipmentId)
-        .input('BorrowFeedback', sql.NVarChar, loan.BorrowFeedback || '')
-        .input('BorrowedAt', sql.DateTime, new Date())
-        .query(`
-          INSERT INTO Loans (PersonId, EquipmentId, BorrowedAt, BorrowFeedback)
-          OUTPUT INSERTED.*
-          VALUES (@PersonId, @EquipmentId, @BorrowedAt, @BorrowFeedback)
-        `);
-
-      // Update equipment availability
-      await connection.request()
-        .input('EquipmentId', sql.Int, loan.EquipmentId)
-        .query('UPDATE Equipment SET IsAvailable = 0 WHERE EquipmentId = @EquipmentId');
-
-      createdLoans.push(result.recordset[0]);
     }
+
+    const createdLoans = await executeTransaction(async (transaction) => {
+      const loans = [];
+
+      for (const loan of body) {
+        const result = await transaction.request()
+          .input('PersonId', sql.Int, loan.PersonId)
+          .input('EquipmentId', sql.Int, loan.EquipmentId)
+          .input('BorrowFeedback', sql.NVarChar, loan.BorrowFeedback || '')
+          .input('BorrowedAt', sql.DateTime, new Date())
+          .query(`
+            INSERT INTO Loans (PersonId, EquipmentId, BorrowedAt, BorrowFeedback)
+            OUTPUT INSERTED.*
+            VALUES (@PersonId, @EquipmentId, @BorrowedAt, @BorrowFeedback)
+          `);
+
+        // Update equipment availability
+        await transaction.request()
+          .input('EquipmentId', sql.Int, loan.EquipmentId)
+          .query('UPDATE Equipment SET IsAvailable = 0 WHERE EquipmentId = @EquipmentId');
+
+        loans.push(result.recordset[0]);
+      }
+
+      return loans;
+    });
 
     return {
       status: 201,
@@ -335,48 +344,54 @@ async function returnLoan(request: HttpRequest, context: InvocationContext): Pro
     }
 
     const body = await request.json() as ReturnLoanRequest;
-    const connection = await getConnection();
 
-    // Get the equipment ID before updating
-    const loanResult = await connection.request()
-      .input('LoanId', sql.Int, loanId)
-      .query('SELECT EquipmentId FROM Loans WHERE LoanId = @LoanId');
+    const result = await executeTransaction(async (transaction) => {
+      // Get the equipment ID before updating
+      const loanResult = await transaction.request()
+        .input('LoanId', sql.Int, loanId)
+        .query('SELECT EquipmentId FROM Loans WHERE LoanId = @LoanId');
 
-    if (loanResult.recordset.length === 0) {
-      return {
-        status: 404,
-        jsonBody: { error: 'Loan not found' },
-      };
-    }
+      if (loanResult.recordset.length === 0) {
+        throw new Error('Loan not found');
+      }
 
-    const equipmentId = loanResult.recordset[0].EquipmentId;
+      const equipmentId = loanResult.recordset[0].EquipmentId;
 
-    // Update loan
-    const result = await connection.request()
-      .input('LoanId', sql.Int, loanId)
-      .input('ReturnedAt', sql.DateTime, new Date())
-      .input('ReturnFeedback', sql.NVarChar, body.ReturnFeedback || '')
-      .query(`
-        UPDATE Loans 
-        SET ReturnedAt = @ReturnedAt, ReturnFeedback = @ReturnFeedback
-        OUTPUT INSERTED.*
-        WHERE LoanId = @LoanId
-      `);
+      // Update loan
+      const updateResult = await transaction.request()
+        .input('LoanId', sql.Int, loanId)
+        .input('ReturnedAt', sql.DateTime, new Date())
+        .input('ReturnFeedback', sql.NVarChar, body.ReturnFeedback || '')
+        .query(`
+          UPDATE Loans 
+          SET ReturnedAt = @ReturnedAt, ReturnFeedback = @ReturnFeedback
+          OUTPUT INSERTED.*
+          WHERE LoanId = @LoanId
+        `);
 
-    // Update equipment availability
-    await connection.request()
-      .input('EquipmentId', sql.Int, equipmentId)
-      .query('UPDATE Equipment SET IsAvailable = 1 WHERE EquipmentId = @EquipmentId');
+      // Update equipment availability
+      await transaction.request()
+        .input('EquipmentId', sql.Int, equipmentId)
+        .query('UPDATE Equipment SET IsAvailable = 1 WHERE EquipmentId = @EquipmentId');
+
+      return updateResult.recordset[0];
+    });
 
     return {
       status: 200,
-      jsonBody: result.recordset[0],
+      jsonBody: result,
       headers: {
         'Content-Type': 'application/json',
       },
     };
   } catch (error) {
     context.error('Error returning loan:', error);
+    if ((error as Error).message === 'Loan not found') {
+      return {
+        status: 404,
+        jsonBody: { error: 'Loan not found' },
+      };
+    }
     return {
       status: 500,
       jsonBody: { error: 'Failed to return loan' },
@@ -396,40 +411,43 @@ async function returnBatchLoans(request: HttpRequest, context: InvocationContext
       };
     }
 
-    const connection = await getConnection();
-    const returnedLoans = [];
+    const returnedLoans = await executeTransaction(async (transaction) => {
+      const loans = [];
 
-    for (const loanId of body.LoanIds) {
-      // Get the equipment ID before updating
-      const loanResult = await connection.request()
-        .input('LoanId', sql.Int, loanId)
-        .query('SELECT EquipmentId FROM Loans WHERE LoanId = @LoanId');
+      for (const loanId of body.LoanIds) {
+        // Get the equipment ID before updating
+        const loanResult = await transaction.request()
+          .input('LoanId', sql.Int, loanId)
+          .query('SELECT EquipmentId FROM Loans WHERE LoanId = @LoanId');
 
-      if (loanResult.recordset.length === 0) {
-        continue;
+        if (loanResult.recordset.length === 0) {
+          continue;
+        }
+
+        const equipmentId = loanResult.recordset[0].EquipmentId;
+
+        // Update loan
+        const result = await transaction.request()
+          .input('LoanId', sql.Int, loanId)
+          .input('ReturnedAt', sql.DateTime, new Date())
+          .input('ReturnFeedback', sql.NVarChar, body.ReturnFeedback || '')
+          .query(`
+            UPDATE Loans 
+            SET ReturnedAt = @ReturnedAt, ReturnFeedback = @ReturnFeedback
+            OUTPUT INSERTED.*
+            WHERE LoanId = @LoanId
+          `);
+
+        // Update equipment availability
+        await transaction.request()
+          .input('EquipmentId', sql.Int, equipmentId)
+          .query('UPDATE Equipment SET IsAvailable = 1 WHERE EquipmentId = @EquipmentId');
+
+        loans.push(result.recordset[0]);
       }
 
-      const equipmentId = loanResult.recordset[0].EquipmentId;
-
-      // Update loan
-      const result = await connection.request()
-        .input('LoanId', sql.Int, loanId)
-        .input('ReturnedAt', sql.DateTime, new Date())
-        .input('ReturnFeedback', sql.NVarChar, body.ReturnFeedback || '')
-        .query(`
-          UPDATE Loans 
-          SET ReturnedAt = @ReturnedAt, ReturnFeedback = @ReturnFeedback
-          OUTPUT INSERTED.*
-          WHERE LoanId = @LoanId
-        `);
-
-      // Update equipment availability
-      await connection.request()
-        .input('EquipmentId', sql.Int, equipmentId)
-        .query('UPDATE Equipment SET IsAvailable = 1 WHERE EquipmentId = @EquipmentId');
-
-      returnedLoans.push(result.recordset[0]);
-    }
+      return loans;
+    });
 
     return {
       status: 200,
