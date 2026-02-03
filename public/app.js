@@ -141,6 +141,7 @@ function setupFormHandlers() {
         }
         
         try {
+            // API expects: { PersonId: number, EquipmentIds: number[], BorrowFeedback: string|null }
             const response = await fetch(`${API_BASE_URL}/loans/batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -265,6 +266,7 @@ async function returnSelectedLoans() {
     }
     
     try {
+        // API expects: { LoanIds: number[], ReturnFeedback: string|null }
         const response = await fetch(`${API_BASE_URL}/loans/return-batch`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },

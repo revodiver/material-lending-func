@@ -74,7 +74,32 @@ De backend (Azure Functions) moet CORS toestaan voor je Static Web App:
 3. Pas aan naar de URL van je backend Azure Functions
 4. Commit en push de wijziging
 
-### 5. Deployment Testen
+### 5. Backend API Contract Verifiëren
+
+De frontend verwacht dat de backend de volgende API endpoints ondersteunt:
+
+**Batch Loan Creation:**
+```
+POST /api/loans/batch
+Body: {
+  "PersonId": number,
+  "EquipmentIds": number[],
+  "BorrowFeedback": string|null
+}
+```
+
+**Batch Loan Return:**
+```
+PATCH /api/loans/return-batch  
+Body: {
+  "LoanIds": number[],
+  "ReturnFeedback": string|null
+}
+```
+
+Zorg dat je backend deze formaten accepteert!
+
+### 6. Deployment Testen
 
 Push naar `main` branch triggert automatisch een deployment:
 
@@ -86,7 +111,7 @@ Bekijk de status:
 - GitHub: Actions tab → "Azure Static Web Apps CI/CD"
 - Azure Portal: Static Web App → Deployment History
 
-### 6. Applicatie Testen
+### 7. Applicatie Testen
 
 1. Open je Static Web App URL (bijv. `https://material-lending-swa.azurestaticapps.net`)
 2. Test de tabs:
