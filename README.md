@@ -1,6 +1,32 @@
 # Material Lending Functions - Azure Backend
 
+> ⚠️ **Let op**: Dit is de **BACKEND API** repository (Azure Functions).  
+> Voor de **frontend** zie: [`revodiver/material-lending-sys`](https://github.com/revodiver/material-lending-sys) (indien beschikbaar)
+
 Azure Functions backend voor het material lending systeem. Deze backend biedt een RESTful API voor het beheren van personen, materiaal, categorieën en uitleningen.
+
+## 🏗️ Architectuur
+
+- **Backend (deze repo)**: Azure Functions v4 → Deployed naar `material-lending-func.azurewebsites.net`
+- **Frontend (aparte repo)**: Static Web App → Maakt API calls naar deze backend
+- **Database**: Azure SQL Database → Direct verbonden met deze backend
+
+## ❓ Veelgestelde Vragen
+
+**Q: Waarom zie ik mijn code niet in Static Web Apps?**  
+A: Deze repository bevat de **backend** (API), niet de frontend. De backend wordt gedeployed naar Azure Functions (`.azurewebsites.net`), niet naar Static Web Apps (`.azurestaticapps.net`).
+
+**Q: Waar is mijn frontend code?**  
+A: De frontend is een aparte repository. Deze repo bevat alleen de backend API endpoints.
+
+**Q: Hoe koppel ik de frontend aan deze backend?**  
+A: Zie [DEPLOYMENT.md](DEPLOYMENT.md) voor gedetailleerde instructies over het koppelen van een Static Web App aan deze Azure Functions backend.
+
+**Q: Is mijn code verdwenen?**  
+A: Nee! Alle code staat in `src/functions/` en `src/lib/`. Controleer met `git log` of `ls src/functions/`.
+
+**Q: Wat is het verschil tussen deze deployment en SWA?**  
+A: Zie [DEPLOYMENT.md](DEPLOYMENT.md) voor een uitgebreide uitleg over het verschil tussen Azure Functions en Static Web Apps hosting.
 
 ## 🚀 Functionaliteiten
 
@@ -157,7 +183,9 @@ npm run build
 func azure functionapp publish material-lending-func
 ```
 
-## 🔗 Koppelen aan Static Web App
+## 🔗 Koppelen aan Static Web App (Frontend)
+
+> 💡 **Zie ook**: [DEPLOYMENT.md](DEPLOYMENT.md) voor gedetailleerde uitleg over de hosting architectuur
 
 Om de backend te koppelen aan de frontend Static Web App:
 
